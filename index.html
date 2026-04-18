@@ -6,25 +6,38 @@
 <title>Opening Obsidian...</title>
 <style>
   body { font-family: -apple-system, sans-serif; text-align: center; padding: 60px 20px; color: #333; }
-  a { color: #7c3aed; }
+  .open-btn { display: inline-block; margin: 20px 0; padding: 16px 32px; background: #7c3aed; color: #fff; text-decoration: none; border-radius: 8px; font-size: 18px; }
   .fallback { margin-top: 24px; font-size: 14px; color: #888; }
 </style>
 <script>
-  const params = new URLSearchParams(window.location.search);
-  const file = params.get('file');
-  const vault = params.get('vault') || 'Documents';
-  if (file) {
-    const url = 'obsidian://open?vault=' + encodeURIComponent(vault) + '&file=' + encodeURIComponent(file);
-    window.location.href = url;
-    document.addEventListener('DOMContentLoaded', function() {
-      document.getElementById('manual-link').href = url;
-    });
+  // Extract raw file param to preserve exact encoding (avoid encodeURIComponent turning / into %2F)
+  var fileEncoded = null;
+  var m = window.location.search.match(/[?&]file=([^&]*)/);
+  if (m) fileEncoded = m[1];
+
+  var obsidianUrl = fileEncoded
+    ? 'obsidian://open?vault=Documents&file=' + fileEncoded
+    : null;
+
+  if (obsidianUrl) {
+    // Try auto-redirect (works in Safari, may be blocked in Discord in-app browser)
+    window.location.href = obsidianUrl;
   }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    if (obsidianUrl) {
+      document.getElementById('open-btn').href = obsidianUrl;
+    } else {
+      document.getElementById('open-btn').style.display = 'none';
+      document.getElementById('error').style.display = 'block';
+    }
+  });
 </script>
 </head>
 <body>
   <h2>Opening Obsidian...</h2>
-  <p>If nothing happened, <a id="manual-link" href="#">click here</a>.</p>
-  <p class="fallback">If Obsidian is not installed, <a href="https://obsidian.md">download it here</a>.</p>
+  <a id="open-btn" class="open-btn" href="#">Open in Obsidian</a>
+  <p id="error" style="display:none; color:#c00;">Missing file parameter.</p>
+  <p class="fallback">If the note didn't open, tap the button above.</p>
 </body>
 </html>
