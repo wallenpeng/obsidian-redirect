@@ -10,17 +10,24 @@
   .fallback { margin-top: 24px; font-size: 14px; color: #888; }
 </style>
 <script>
-  // Extract raw file param to preserve exact encoding (avoid encodeURIComponent turning / into %2F)
+  // Extract raw file param to preserve exact encoding
   var fileEncoded = null;
   var m = window.location.search.match(/[?&]file=([^&]*)/);
   if (m) fileEncoded = m[1];
 
-  var obsidianUrl = fileEncoded
-    ? 'obsidian://open?vault=Documents&file=' + fileEncoded
-    : null;
+  var obsidianUrl = null;
+  if (fileEncoded) {
+    // Mac vault = "Documents", file includes "Cloud/" prefix
+    // iPhone vault = "Cloud", file path strips "Cloud/" prefix
+    var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    if (isIOS) {
+      var mobileFile = fileEncoded.replace(/^Cloud\//, '');
+      obsidianUrl = 'obsidian://open?vault=Cloud&file=' + mobileFile;
+    } else {
+      obsidianUrl = 'obsidian://open?vault=Documents&file=' + fileEncoded;
+    }
 
-  if (obsidianUrl) {
-    // Try auto-redirect (works in Safari, may be blocked in Discord in-app browser)
+    // Try auto-redirect
     window.location.href = obsidianUrl;
   }
 
